@@ -4,7 +4,9 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.drsync.paging3compose.util.Constants.UNSPLASH_IMAGE_TABLE
+import kotlinx.serialization.Serializable
 
+@Serializable
 @Entity(tableName = UNSPLASH_IMAGE_TABLE)
 data class UnsplashImage(
     @PrimaryKey(autoGenerate = false)
