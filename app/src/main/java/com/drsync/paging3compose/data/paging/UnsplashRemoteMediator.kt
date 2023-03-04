@@ -9,6 +9,7 @@ import com.drsync.paging3compose.data.local.UnsplashDatabase
 import com.drsync.paging3compose.data.remote.ApiService
 import com.drsync.paging3compose.model.UnsplashImage
 import com.drsync.paging3compose.model.UnsplashRemoteKeys
+import com.drsync.paging3compose.util.Constants.ITEM_PER_PAGE
 import javax.inject.Inject
 
 @ExperimentalPagingApi
@@ -48,7 +49,7 @@ class UnsplashRemoteMediator @Inject constructor(
                 }
             }
 
-            val response = apiService.getAllImages(page = currentPage, perPage = 10)
+            val response = apiService.getAllImages(page = currentPage, perPage = ITEM_PER_PAGE)
             val endOfPaginationReached = response.isEmpty()
 
             val prevPage = if (currentPage == 1) null else currentPage - 1
