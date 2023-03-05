@@ -10,7 +10,7 @@ import com.drsync.paging3compose.util.Constants.UNSPLASH_REMOTE_KEYS_TABLE
 @Dao
 interface UnsplashRemoteKeysDao {
 
-    @Query("SELECT * FROM $UNSPLASH_REMOTE_KEYS_TABLE")
+    @Query("SELECT * FROM $UNSPLASH_REMOTE_KEYS_TABLE WHERE id =:id")
     suspend fun getRemoteKeys(id: String): UnsplashRemoteKeys
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
