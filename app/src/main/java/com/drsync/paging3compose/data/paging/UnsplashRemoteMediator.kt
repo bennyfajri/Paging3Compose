@@ -1,5 +1,6 @@
 package com.drsync.paging3compose.data.paging
 
+import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
@@ -10,16 +11,16 @@ import com.drsync.paging3compose.data.remote.ApiService
 import com.drsync.paging3compose.model.UnsplashImage
 import com.drsync.paging3compose.model.UnsplashRemoteKeys
 import com.drsync.paging3compose.util.Constants.ITEM_PER_PAGE
-import javax.inject.Inject
+import com.drsync.paging3compose.util.Constants.TAG
 
 @ExperimentalPagingApi
-class UnsplashRemoteMediator @Inject constructor(
+class UnsplashRemoteMediator(
     private val apiService: ApiService,
     private val database: UnsplashDatabase
 ) : RemoteMediator<Int, UnsplashImage>() {
 
-    private val imageDao = database.unsplashImageDao()
-    private val remoteKeysDao = database.unsplashRemoteKeysDao()
+    private val unsplashImageDao = database.unsplashImageDao()
+    private val unsplashRemoteKeysDao = database.unsplashRemoteKeysDao()
 
     override suspend fun load(
         loadType: LoadType,
@@ -32,7 +33,7 @@ class UnsplashRemoteMediator @Inject constructor(
                     remoteKeys?.nextPage?.minus(1) ?: 1
                 }
                 LoadType.PREPEND -> {
-                    val remoteKeys = getRemoteKeysForFirstItem(state)
+                    val remoteKeys = getRemoteKeyForFirstItem(state)
                     val prevPage = remoteKeys?.prevPage
                         ?: return MediatorResult.Success(
                             endOfPaginationReached = remoteKeys != null
@@ -40,16 +41,17 @@ class UnsplashRemoteMediator @Inject constructor(
                     prevPage
                 }
                 LoadType.APPEND -> {
-                    val remoteKeys = getRemoteKeyForLastITem(state)
+                    val remoteKeys = getRemoteKeyForLastItem(state)
                     val nextPage = remoteKeys?.nextPage
                         ?: return MediatorResult.Success(
                             endOfPaginationReached = remoteKeys != null
-                    )
+                        )
                     nextPage
                 }
             }
 
             val response = apiService.getAllImages(page = currentPage, perPage = ITEM_PER_PAGE)
+            Log.d(TAG, "load: $response")
             val endOfPaginationReached = response.isEmpty()
 
             val prevPage = if (currentPage == 1) null else currentPage - 1
@@ -57,8 +59,8 @@ class UnsplashRemoteMediator @Inject constructor(
 
             database.withTransaction {
                 if (loadType == LoadType.REFRESH) {
-                    imageDao.deleteAllImages()
-                    remoteKeysDao.deleteAllRemoteKeys()
+                    unsplashImageDao.deleteAllImages()
+                    unsplashRemoteKeysDao.deleteAllRemoteKeys()
                 }
                 val keys = response.map { unsplashImage ->
                     UnsplashRemoteKeys(
@@ -67,8 +69,8 @@ class UnsplashRemoteMediator @Inject constructor(
                         nextPage = nextPage
                     )
                 }
-                remoteKeysDao.addAllRemoteKeys(remoteKeys = keys)
-                imageDao.addImages(image = response)
+                unsplashRemoteKeysDao.addAllRemoteKeys(remoteKeys = keys)
+                unsplashImageDao.addImages(image = response)
             }
             MediatorResult.Success(endOfPaginationReached = endOfPaginationReached)
         } catch (e: Exception) {
@@ -81,26 +83,27 @@ class UnsplashRemoteMediator @Inject constructor(
     ): UnsplashRemoteKeys? {
         return state.anchorPosition?.let { position ->
             state.closestItemToPosition(position)?.id?.let { id ->
-                remoteKeysDao.getRemoteKeys(id = id)
+                unsplashRemoteKeysDao.getRemoteKeys(id = id)
             }
         }
     }
 
-    private suspend fun getRemoteKeysForFirstItem(
+    private suspend fun getRemoteKeyForFirstItem(
         state: PagingState<Int, UnsplashImage>
     ): UnsplashRemoteKeys? {
         return state.pages.firstOrNull { it.data.isNotEmpty() }?.data?.firstOrNull()
             ?.let { unsplashImage ->
-                remoteKeysDao.getRemoteKeys(id = unsplashImage.id)
+                unsplashRemoteKeysDao.getRemoteKeys(id = unsplashImage.id)
             }
     }
 
-    private suspend fun getRemoteKeyForLastITem(
+    private suspend fun getRemoteKeyForLastItem(
         state: PagingState<Int, UnsplashImage>
     ): UnsplashRemoteKeys? {
-        return state.pages.lastOrNull { it.data.isNotEmpty() }?.data?.firstOrNull()
+        return state.pages.lastOrNull { it.data.isNotEmpty() }?.data?.lastOrNull()
             ?.let { unsplashImage ->
-                remoteKeysDao.getRemoteKeys(id = unsplashImage.id)
+                unsplashRemoteKeysDao.getRemoteKeys(id = unsplashImage.id)
             }
     }
+
 }

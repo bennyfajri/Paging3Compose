@@ -2,6 +2,7 @@ package com.drsync.paging3compose.screen.common
 
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -38,6 +39,7 @@ import com.drsync.paging3compose.ui.theme.HeartRed
 @ExperimentalCoilApi
 @Composable
 fun ListContent(items: LazyPagingItems<UnsplashImage>) {
+    Log.d("Error: ", "ListContent: ${items.itemCount}")
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(all = 12.dp),
@@ -57,12 +59,11 @@ fun ListContent(items: LazyPagingItems<UnsplashImage>) {
 @ExperimentalCoilApi
 @Composable
 fun UnsplashItem(unsplashImage: UnsplashImage) {
-    val painter = rememberImagePainter(data = unsplashImage.urls.regularImage) {
+    val painter = rememberImagePainter(data = unsplashImage.urls.regular) {
         crossfade(durationMillis = 1000)
         error(R.drawable.ic_placeholder)
         placeholder(R.drawable.ic_placeholder)
     }
-
     val context = LocalContext.current
     Box(
         modifier = Modifier
@@ -94,13 +95,13 @@ fun UnsplashItem(unsplashImage: UnsplashImage) {
             modifier = Modifier
                 .height(40.dp)
                 .fillMaxWidth()
-                .padding(horizontal = 6.dp),
+                .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = buildAnnotatedString {
-                    append("photo by ")
+                    append("Photo by ")
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Black)) {
                         append(unsplashImage.user.username)
                     }
@@ -149,13 +150,13 @@ fun LikeCounter(
 }
 
 @ExperimentalCoilApi
-@Preview
 @Composable
+@Preview
 fun UnsplashImagePreview() {
     UnsplashItem(
         unsplashImage = UnsplashImage(
             id = "1",
-            urls = Urls(regularImage = ""),
+            urls = Urls(regular = ""),
             likes = 100,
             user = User(username = "Benny", userLinks = UserLinks(html = ""))
         )

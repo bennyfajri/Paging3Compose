@@ -1,6 +1,7 @@
 package com.drsync.paging3compose.di
 
 import com.drsync.paging3compose.BuildConfig
+import com.drsync.paging3compose.BuildConfig.BASE_URL
 import com.drsync.paging3compose.data.remote.ApiService
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
@@ -10,7 +11,9 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
@@ -23,7 +26,13 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideHttpClient(): OkHttpClient {
+        val loggingInterceptor = if (BuildConfig.DEBUG) {
+            HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
+        } else {
+            HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.NONE)
+        }
         return OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
             .readTimeout(15, TimeUnit.SECONDS)
             .connectTimeout(15, TimeUnit.SECONDS)
             .build()
@@ -31,15 +40,15 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(okhttpClient: OkHttpClient): Retrofit {
-        val contentType = MediaType.get("application/json")
+    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
+        val contentType = "application/json".toMediaType()
         val json = Json {
             ignoreUnknownKeys = true
         }
 
         return Retrofit.Builder()
-            .baseUrl(BuildConfig.BASE_URL)
-            .client(okhttpClient)
+            .baseUrl(BASE_URL)
+            .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()
     }
