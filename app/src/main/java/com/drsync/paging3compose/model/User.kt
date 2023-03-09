@@ -9,5 +9,8 @@ data class User(
     @SerialName("links")
     @Embedded
     val userLinks: UserLinks,
-    val username: String
+    val username: String,
+    @SerialName("profile_image")
+    @Embedded
+    val profileImage: ProfileImage
 )
