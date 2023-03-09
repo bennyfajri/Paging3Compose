@@ -12,6 +12,7 @@ import com.drsync.paging3compose.model.UnsplashImage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,10 +22,10 @@ class SearchViewModel @Inject constructor(
     private val repository: UnsplashImageRepository
 ) : ViewModel() {
     private val _searchQuery = mutableStateOf("")
-    val searchQuery = _searchQuery
+    val searchQuery: State<String> = _searchQuery
 
     private val _searchedImages = MutableStateFlow<PagingData<UnsplashImage>>(PagingData.empty())
-    val searchedImages = _searchedImages
+    val searchedImages : StateFlow<PagingData<UnsplashImage>> = _searchedImages
 
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
